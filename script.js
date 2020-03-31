@@ -1,3 +1,10 @@
+function checkInputs(){
+  sizeData = parseInt(document.querySelector("#sizeData").value);
+  (sizeData < 1)? document.querySelector("#sizeData").value = 1: "";
+  (sizeData > 25)? document.querySelector("#sizeData").value = 25: "";
+}
+checkInputs();
+
 function generateRandomData(){
   const size = document.querySelector('#sizeData').value;
   const min = parseFloat(document.querySelector('#limitInf').value);
@@ -20,8 +27,9 @@ function generateRandomData(){
 
 function countDecimals(number){
   if (Math.floor(number) === number) return 0;
-  return number.toString();
+  return number.toString().split(".")[1].length;
 }
+
 function getScale(number){
   /*
   entrée: un nombre < 1
@@ -49,7 +57,6 @@ function getScale(number){
   else if (number >= 0){
     if (number.toString().includes("e")){
       number = number.toString();
-      console.log(number)
       for (i = 0; i < number.length; i++){
         if (number[i] == "e"){
           return number.substring(i + 1);
@@ -65,10 +72,9 @@ function getScale(number){
 }
 
 function adaptToDisplay(number){
-  console.log(`nombre à adapter : ${number} ${getScale(number)} ${countDecimals(number)}`);
       // on s'assure que le nombre est bien un nombre et pas une chaine de caractère
   number = parseFloat(number);
-  if (number > Math.pow(10, 6)){
+  if (number >= Math.pow(10, 6)){
     // l'exposant de l'échelle du nombre, ex: getScale(236) = 2
     const exponent = getScale(number);
     // l'échelle, ex: Math.pow(10, 2) = 10^2 = 100
@@ -79,13 +85,16 @@ function adaptToDisplay(number){
     number = number.toExponential();
     // en 1 ligne
     // number = (Math.floor(parseFloat(number) / Math.pow(10, getScale(number))) * Math.pow(10, getScale(number))).toExponential();
-  } else if (getScale(number) <= -3){
+  } else if (number >= 10){
+    number = number.toFixed(0);
+  } else if (countDecimals(number) > 3){
+    number = number.toFixed(3);
+  } else if (countDecimals(number) > 3){
     scale = Math.abs(getScale(number));
-    console.log(scale);
     number = parseFloat(number.toFixed(scale));
-    number = number.toExponential();
-  } else if (number < 1){
-    number = number.toFixed(Math.abs(getScale(number)));
+    if (number < 0.001){
+      number = number.toExponential();
+    }
   }
   return number;
 }
@@ -177,7 +186,6 @@ function getLists(){
   Je viens de me rendre compte qu'il y a trop de fonctions dans ce 
   paragraphe.
   */
-  
   return {
     abs: document.querySelector("#listX").value.split(",").filter(val => val).map(Number),//.sort((firstNum, secondNum) => firstNum - secondNum),
     ord: document.querySelector("#listY").value.split(",").filter(val => val).map(Number)//.sort((firstNum, secondNum) => firstNum - secondNum)
@@ -308,12 +316,10 @@ function drawAbs(graduationLength, axisSize, listAbs, step){
   ctx.fillStyle = "black";  // couleur de remplissage (pour le texte)
   ctx.textAlign = "center"; // alignement horizontal
   ctx.beginPath();
-  //console.clear();
   for (i in listAbs){
     let value = listAbs[i];
-    //console.log(value);
-    //console.log(getScale(value));
-    value = value.toFixed(Math.abs(getScale(value)));
+    //value = value.toFixed(Math.abs(getScale(value)));
+    value = adaptToDisplay(value);
     const x = axisSize + i * step;  // abscisse de la graduation
     // on écrit la valeur de la graduation
     ctx.fillText(String(value), x + step / 2, histoHeight + 2 * graduationLength)
@@ -345,7 +351,7 @@ function drawOrd(graduationLength, axisSize, histoHeight, maxOrd){
   // parcours des graduations
   for (let i = 0; i < nbGraduation; i++){
     // calcul et arrondi si nécessaire de la valeur à afficher
-    const value = adaptToDisplay((i * stepValue)/*.toFixed(precision)*/);
+    const value = adaptToDisplay((i * stepValue));
     // hauteur de la graduation à tracer
     const y = histoHeight - i * stepGraduation;
     // affichage de la valeur à gauche de la graduation dans l'espace réservé
@@ -363,7 +369,6 @@ function drawColumns(columns, step, axisSize){
   // parcours de toutes les colonnes
   for (i in columns){
     column = columns[i];
-    //console.log(`colonne ${i} :`, column);
     const abs  = i * step.abs;  // position "virtuelle" en abscisse
     const ord = column.ord * step.ord;  // idem pour les ordonnées
     // trace le contour de la colonne
@@ -381,14 +386,8 @@ function drawHisto(){
   et des ordonées.
   */
 
-  //console.clear();  // effacer contenu de la console
-  nb = -0.045;
-  //console.log(nb);
-  //console.log("précision", getScale(nb));
-
   // on récupère les listes des abscisses et ordonnées entrées par l'utilisateur
   const lists = getLists();
-
   // on récupère le minimum et maximum de chaque liste
   const extremums = {
     abs: getExtremums(lists.abs),
@@ -472,9 +471,15 @@ document.body.style.height = "100vh";
 // pouvoir dessiner dessus
 const ctx = can.getContext("2d");
 ctx.font = "30px Arial";  // taille et police du texte
-resizeCanvas(); // on met le canvas à la bonne taille
 generateRandomData()
+resizeCanvas(); // on met le canvas à la bonne taille
 
 // pour rendre le canvas "responsive" (adaptatif)
 // window.addEventListener("événement", fonctionAexecuter)
 window.addEventListener("resize", resizeCanvas);
+
+inputs = document.querySelectorAll("input");
+
+for (i in inputs){
+  inputs[i].onchange = checkInputs;
+}

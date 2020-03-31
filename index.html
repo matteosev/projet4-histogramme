@@ -1,47 +1,60 @@
-<h1>Histogramme</h1>
+<!DOCTYPE html>
+<html>
 
-<div class="interface">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title>Histogramme - projet 4</title>
+  <link rel = "stylesheet" href = "style.css">
+</head>
+<body>
 
-  <div class="input-group">
-    <label for="size">taille</label>
-    <input type="number" name="size" id="sizeData" value="10">
+  <div class = "interface" id="main">
+
+    <h1>Histogramme</h1>
+
+    <div class="interface">
+
+      <div class="input-group">
+        <label for="size">taille</label>
+        <input type="number" name="size" id="sizeData" min = "1" max = "25" value="10">
+      </div>
+
+      <div class="input-group">
+        <label for="limitSup">borne supérieure</label>
+        <input type="text" name="limitSup" id="limitSup" value="10"></input>
+      </div>
+
+      <div class="input-group">
+        <label for="limitInf">borne inférieure</label>
+        <input type="text" name="limitInf" id="limitInf" value="0"></input>
+      </div>
+
+      <button type="button" onclick = "generateRandomData()">générer des données aléatoires</button>
+
+    </div>
+
+    <div class="interface">
+
+      <div class="input-group">
+        <label for="abs">abscisses</label>
+        <input type="text" name="abs" id="listX"></input>
+      </div>
+
+      <div class="input-group">
+        <label for="ord">ordonnées</label>
+        <input type="text" name="ord" id="listY"></input>
+      </div>
+
+      <button type="button" onclick = "drawHisto()">
+      tracer la courbe</button>
+
+    </div>
+
+    <canvas id="can" ></canvas>
+
   </div>
-
-  <div class="input-group">
-    <label for="limitSup">borne supérieure</label>
-    <input type="text" name="limitSup" id="limitSup" value="0">
-  </div>
-
-  <div class="input-group">
-    <label for="limitInf">borne inférieure</label>
-    <input type="text" name="limitInf" id="limitInf" value="10">
-  </div>
-
-  <button type="button" onclick = "generateRandomData()">générer</button>
-
-</div>
-
-<div class="interface">
-
-  <div class="input-group">
-    <label for="abs">abscisses</label>
-    <input type="text" name="abs" id="listX">
-  </div>
-
-  <div class="input-group">
-    <label for="ord">ordonnées</label>
-    <input type="text" name="ord" id="listY">
-  </div>
-
-  <button type="button" onclick = "drawHisto()">
-  trace la courbe!</button>
-
-</div>
-
-<canvas id="can" ></canvas>
-
-</div>
-<script src="script.js"></script>
+  <script src="script.js"></script>
 
 </body>
 </html>
