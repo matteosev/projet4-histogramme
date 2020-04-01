@@ -6,6 +6,7 @@
 
 .interface{
 	display: flex;
+	flex-wrap: wrap;
 	justify-content: space-evenly;
 	margin-top: 1%;
 	margin-bottom: 1%;
