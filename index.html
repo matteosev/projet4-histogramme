@@ -9,7 +9,7 @@
 </head>
 <body>
 
-  <div class = "interface" id="main">
+  <div id="main">
 
     <h1>Histogramme</h1>
 
@@ -21,18 +21,18 @@
       </div>
 
       <div class="input-group">
-        <label for="limitSup">borne supérieure</label>
-        <input type="text" name="limitSup" id="limitSup" value="10"></input>
-      </div>
-
-      <div class="input-group">
         <label for="limitInf">borne inférieure</label>
         <input type="text" name="limitInf" id="limitInf" value="0"></input>
       </div>
 
-      <button type="button" onclick = "generateRandomData()">générer des données aléatoires</button>
+      <div class="input-group">
+        <label for="limitSup">borne supérieure</label>
+        <input type="text" name="limitSup" id="limitSup" value="10"></input>
+      </div>
 
     </div>
+
+    <div class="button-container"><button type="button" onclick = "generateRandomData()">générer des données aléatoires</button></div>
 
     <div class="interface">
 
@@ -46,10 +46,10 @@
         <input type="text" name="ord" id="listY"></input>
       </div>
 
-      <button type="button" onclick = "drawHisto()">
-      tracer la courbe</button>
-
     </div>
+
+    <div class="button-container"><button type="button" onclick = "drawHisto()">
+      tracer la courbe</button></div>
 
     <canvas id="can" ></canvas>
 

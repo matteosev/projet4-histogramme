@@ -4,18 +4,61 @@
 	}
 }
 
+.interface{
+	display: flex;
+	justify-content: space-evenly;
+	margin-top: 1%;
+	margin-bottom: 1%;
+}
+
 #main{
 	margin: auto; 
-  text-align: center;
-}
-
-#can{
-  margin: auto;
-}
-
-.interface{
+	text-align: center;
 	display: flex;
 	flex-direction: column;
 	flex-wrap: wrap;
 	justify-content: space-between;
+	background-color: white;
+	border-radius: 5%;
+}
+
+#can{
+	  margin: auto;
+	  margin-top: 1%;
+}
+
+body{
+	font-family: sans-serif;
+	background-image: linear-gradient(to top, #add8e6, #a6dbe8, #a0dfea, #99e2ea, #93e5e9);
+}
+
+label{
+	display: block;
+	padding: 5%;
+	width: 100%;
+}
+
+input{
+	padding: 5%;
+}
+
+button{
+	font-family: sans-serif;
+	border: 2px solid #add8e6;
+	padding: 10px;
+	background-color: white;
+	border-radius: 10px;
+	transition-duration: 0.5s;
+}
+
+input:focus{
+	background-color: #add8e6;
+}
+
+button:hover{
+	background-color: #add8e6;
+}
+
+button:active, button:focus{
+	transform: scale(1.1);
 }
