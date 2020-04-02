@@ -27,8 +27,7 @@
 	flex-direction: column;
 	flex-wrap: wrap;
 	justify-content: space-evenly;
-	background-color: white;
-	border-radius: 5%;
+	background: #efefef;
 }
 
 #canvas-container{
@@ -41,12 +40,15 @@
 	margin: auto;
 }
 
+#stop{
+	width: 100%;
+}
+
 body{
 	font-family: sans-serif;
 	width: 100%;
 	margin: 0;
-	/*background-image: linear-gradient(to top, #add8e6, #a6dbe8, #a0dfea, #99e2ea, #93e5e9);
-*/}
+}
 
 label{
 	display: block;
@@ -55,24 +57,34 @@ label{
 }
 
 input{
+	border: 0px;
 	padding: 5%;
+	transition-duration: 0.5s;
+    border-radius: 50px;
 }
 
 button{
 	font-family: sans-serif;
-	border: 2px solid #add8e6;
+	border: 0px;
 	padding: 10px;
 	background-color: white;
 	border-radius: 10px;
 	transition-duration: 0.5s;
+	border-radius: 50px;
 }
 
+input:hover{
+	box-shadow: 10px 10px 5px #656565;
+
+}
 input:focus{
 	background-color: #add8e6;
+	transform: scale(1.1);
 }
 
 button:hover{
 	background-color: #add8e6;
+	box-shadow: 5px 5px 5px #656565;
 }
 
 button:active, button:focus{

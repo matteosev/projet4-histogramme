@@ -1,10 +1,34 @@
-function checkInputs(){
-  sizeData = parseInt(document.querySelector("#sizeData").value);
-  (sizeData < 1)? document.querySelector("#sizeData").value = 1: "";
-  (sizeData > 25)? document.querySelector("#sizeData").value = 25: "";
+function checkInputsRandomData(){
+  let isOk = true;
+  const sizeData = document.querySelector("#sizeData");
+  const borneInf = document.querySelector("#limitInf");
+  const borneSup = document.querySelector("#limitSup");
+  const canvasContainer = document.querySelector("#canvas-container");
+  (parseInt(sizeData.value) < 1 || sizeData === "")? sizeData.value = 1: "";
+  (parseInt(sizeData.value) > 25)? sizeData.value = 25: "";
+  (sizeData.value === "")? sizeData.value = 1: "";
+  (borneInf.value === "")? borneInf.value = 0: "";
+  (borneSup.value === "")? borneSup.value = 1: "";
+
+  if (!/^[0-9-+.e]*$/i.test(borneInf.value)){ 
+    alert("caractère incorrect entré pour la borne inférieure");
+    isOk = false;
+  }
+  if (!/^[0-9-+.e]*$/i.test(borneSup.value)){ 
+    alert("caractère incorrect entré pour la borne supéreure");
+    isOk = false;
+  }
+
+  let canvasImage;
+  (ctx)? canvasImage = ctx.getImageData(0, 0, can.width, can.height): "";
+  (!isOk)? canvasContainer.innerHTML = "<img src='stop.svg' id='stop'></img>": canvasContainer.innerHTML = "<canvas id='can' width='1200' height='1200' ></canvas>";
+
+  initializeCanvas();
+  (isOk && (canvasImage !== undefined))? ctx.putImageData(canvasImage, 0, 0): "";
 }
 
 function generateRandomData(){
+  checkInputsRandomData();
   const size = document.querySelector('#sizeData').value;
   const min = parseFloat(document.querySelector('#limitInf').value);
   const max = parseFloat(document.querySelector('#limitSup').value);
@@ -16,12 +40,8 @@ function generateRandomData(){
     y.push(Math.random() * (max - min) + min);
   }
 
-  console.clear();
-  console.log(`data abscisse : ${x}`);
-  console.log(`data ordonnée : ${y}`);
   document.querySelector("#listX").value = x;
   document.querySelector("#listY").value = y;
-  drawHisto();
 }
 
 function countDecimals(number){
@@ -39,9 +59,8 @@ function getScale(number){
   getScale(0.045) = -2
   l'échelle de 0.045 est 10^-2 = 0.01
 
-  ne gère pas les nombres négatifs pour l'instant
+  ne gère pas les nombres négatifs entre 0 et 1 pour l'instant
   */
-
   if (number >= 1){
     number = number.toString();
     if (number.includes(".")){
@@ -67,24 +86,38 @@ function getScale(number){
         if (digit != "0"){return -(index + 1);}
       } 
     }
+  } else {
+    digits = number.toString().split(".");
+    return digits[0].length -2;
   }
 }
 
 function adaptToDisplay(number){
+  //console.log("entree", number)
       // on s'assure que le nombre est bien un nombre et pas une chaine de caractère
   number = parseFloat(number);
-  if (number >= Math.pow(10, 6)){
+  if (number.toString().includes("e")){
+    //console.log("grand")
+    decimals = parseFloat(number.toString().split("e")[0]).toFixed(2);
+    exponent = number.toString().split("e")[1];
+    number = parseFloat(decimals + "e" + exponent);
+  }else if ((number >= Math.pow(10, 6)) || (number <= -Math.pow(10, 6))){
     // l'exposant de l'échelle du nombre, ex: getScale(236) = 2
     const exponent = getScale(number);
+    //console.log("exponent",exponent);
     // l'échelle, ex: Math.pow(10, 2) = 10^2 = 100
     const scale = Math.pow(10, exponent);
+    //console.log("scale", scale)
     // on arrondi le nombre au maximum
-    number = Math.floor(number / scale) * scale;
+    //console.log("avant floor", number)
+    //console.log(Math.floor(number / scale))
+    number = (Math.round(number / scale * 10) / 10 * scale);
+    //console.log("apres floor", number)
     // on convertit le nombre en notation scientifique
     number = number.toExponential();
     // en 1 ligne
     // number = (Math.floor(parseFloat(number) / Math.pow(10, getScale(number))) * Math.pow(10, getScale(number))).toExponential();
-  } else if (number >= 10){
+  } else if ((number >= 10) || (number <= -10)){
     number = number.toFixed(0);
   } else if (countDecimals(number) > 3){
     number = number.toFixed(3);
@@ -95,6 +128,7 @@ function adaptToDisplay(number){
       number = number.toExponential();
     }
   }
+  //console.log("sortie", number)
   return number;
 }
 
@@ -379,9 +413,9 @@ function drawColumns(columns, minOrd, maxOrd, step, axisSize){
     let ord;
     //const ord = column.ord * step.ord;  // idem pour les ordonnées
     if (column.ord > 0){
-      ord = column.ord * step.ord + Math.abs(minOrd) * step.ord;  // idem pour les ordonnées
+      ord = (column.ord * step.ord + Math.abs(minOrd) * step.ord).toFixed(9);  // idem pour les ordonnées
     } else if (column.ord < 0){
-      ord = Math.abs(column.ord);
+      ord = ((Math.abs(minOrd) + column.ord) * step.ord).toFixed(9);
     }
     // trace le contour de la colonne
     ctx.strokeRect(abs + axisSize, can.height - axisSize, step.abs, -ord);  
@@ -441,61 +475,30 @@ function drawHisto(){
   drawColumns(columns, extremums.ord.min, extremums.ord.max, step, axisSize);
 }
 
-function resizeCanvas(){
-
-  // si l'écran est en mode portrait
-  if (window.innerWidth < window.innerHeight){
-    /*can.style.width = "100%";  // largeur "physique" (extérieur)
-    can.style.height = window.getComputedStyle(can, null).getPropertyValue("width");*/
-    /*
-    hauteur "physique" (extérieur) :
-    window.getComputedStyle(can, null) = on récupère les attributs de style
-    getPropertyValue("width") = on récupère la largeur en PIXELS
-    puis on assigne à la hauteur la même valeur que la largeur
-    le canvas est donc un carré
-    */
-  }
-  // si l'écran est en mode paysage
-  else{
-    // hauteur de l'élément body - distance par rapport au bord supérieur de cet élément
-    /*const possibleHeight = parseInt(window.getComputedStyle(document.body, null).getPropertyValue("height")) - can.getBoundingClientRect().top;
-    // largeur de l'élément contenant le canvas
-    const containerWidth = parseInt(window.getComputedStyle(document.querySelector("#main"), null).getPropertyValue("width"));
-    if (possibleHeight < containerWidth){
-      can.style.height = possibleHeight + "px";
-      can.style.width = window.getComputedStyle(can, null).getPropertyValue("height");
-    }
-    else{
-      can.style.width = "100%";  // largeur "physique" (extérieur)
-      can.style.height = window.getComputedStyle(can, null).getPropertyValue("width");
-    }*/
-  }
-  // quand le canvas est petit les trait disparaissent car trop fins
-  // donc j'augmente l'épaisseur
-  (parseInt(can.style.height) < 300)? ctx.lineWidth = 5: ctx.lineWidth = 3;
-
-  // on trace l'histogramme
-  drawHisto();
+function initializeCanvas(){
+  can = document.querySelector('#can');
+  can.width = 1200; // largeur "virtuelle" (intérieur)
+  can.height = 1200;  // hauteur "virtuelle" (intérieur)
+  ctx = can.getContext("2d");
+  ctx.font = "30px Arial";  // taille et police du texte
 }
 
 // mise en place
-const can = document.querySelector('#can');
-can.width = 1200; // largeur "virtuelle" (intérieur)
-can.height = 1200;  // hauteur "virtuelle" (intérieur)
-// body occupe toute la hauteur de l'écran
-// on récupère le contexte (= image du canvas à un instant donné) pour 
-// pouvoir dessiner dessus
-const ctx = can.getContext("2d");
-ctx.font = "30px Arial";  // taille et police du texte
+let can;
+let ctx;
 generateRandomData()
-resizeCanvas(); // on met le canvas à la bonne taille
+initializeCanvas();
+drawHisto();
+
 
 // pour rendre le canvas "responsive" (adaptatif)
 // window.addEventListener("événement", fonctionAexecuter)
-window.addEventListener("resize", resizeCanvas);
+window.addEventListener("resize", () => {
+  // fonction anonyme, elle ne nécessite pas de nom
+  // pour + d'infos voir arrow functions sur MDN
 
-inputs = document.querySelectorAll("input");
+  // quand le canvas est petit les trait disparaissent car trop fins
+  // donc j'augmente l'épaisseur
+  (parseInt(can.style.height) < 300)? ctx.lineWidth = 5: ctx.lineWidth = 3;
+});
 
-for (i in inputs){
-  inputs[i].onchange = checkInputs;
-}
