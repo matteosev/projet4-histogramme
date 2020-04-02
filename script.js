@@ -3,7 +3,6 @@ function checkInputs(){
   (sizeData < 1)? document.querySelector("#sizeData").value = 1: "";
   (sizeData > 25)? document.querySelector("#sizeData").value = 25: "";
 }
-checkInputs();
 
 function generateRandomData(){
   const size = document.querySelector('#sizeData').value;
@@ -167,33 +166,31 @@ function getLists(){
 
   */
 
-  /*
-  list.sort(): Range list dans l'ordre alphabétique, c'est à dire
-  si les éléments sont des nombres elle les convertit en caractère
-  selon leur code unicode puis les trie, cette fonction n'est donc
-  pas adaptée pour trier des tableaux de nombres.
-  Pour cela il faut lui fournir un comparateur, c'est à dire une 
-  fonction prenant en paramètre deux éléments et les comparant
-  Ici le comparateur (firstNum, secondNum) => firstNum - secondNum 
-  calcule la différence entre deux nombres :
-  - si firstNum - secondNum < 0 alors firstNum < secondNum
-  - si firstNum - secondNum = 0 alors firstNum = secondNum
-  - si firstNum - secondNum > 0 alors firstNum > secondNum
-  Avec ce comparateur la fonction sort peut alors trier un tableau 
-  de nombres.
-  Cette fonction choisit l'algorithme de tri le plus rapide en 
-  fonction de la taille du tableau à trier.
-  Je viens de me rendre compte qu'il y a trop de fonctions dans ce 
-  paragraphe.
-  */
   return {
-    abs: document.querySelector("#listX").value.split(",").filter(val => val).map(Number),//.sort((firstNum, secondNum) => firstNum - secondNum),
-    ord: document.querySelector("#listY").value.split(",").filter(val => val).map(Number)//.sort((firstNum, secondNum) => firstNum - secondNum)
+    abs: document.querySelector("#listX").value.split(",").filter(val => val).map(Number),
+    ord: document.querySelector("#listY").value.split(",").filter(val => val).map(Number)
   };
 }
 
 function sortLists(abs, ord){
+  length = abs.length;
+  //au cas où différence de taille entre les listes
+  (abs.length > ord.length)? length = abs.length - (abs.length - ord.length) : "";
+  (abs.length < ord.length)? length = ord.length - (ord.length - abs.length) : "";
 
+  // tri par insertion par rapport aux abscisses
+  for (let i = 1; i < length; i++){
+    let tmpAbs = abs[i];
+    let tmpOrd = ord[i];
+    let k = i;
+    while (k > 0 && abs[k - 1] > tmpAbs){
+      abs[k] = abs[k - 1];
+      ord[k] = ord[k - 1];
+      k--
+    }
+    abs[k] = tmpAbs;
+    ord[k] = tmpOrd;
+  }
 }
 
 function getExtremums(list){
@@ -330,7 +327,7 @@ function drawAbs(graduationLength, axisSize, listAbs, step){
   }
 }
 
-function drawOrd(graduationLength, axisSize, histoHeight, maxOrd){
+function drawOrd(graduationLength, axisSize, histoHeight, minOrd, maxOrd){
   /*
   entrée:
     graduationLength: la longueur des graduations
@@ -347,30 +344,45 @@ function drawOrd(graduationLength, axisSize, histoHeight, maxOrd){
   // distance verticale entre chaque graduation
   const stepGraduation = histoHeight / nbGraduation;
   // différence entre chaque valeur des graduations
-  const stepValue = maxOrd / nbGraduation;
+  let stepValue;
+  let value;
+  if (minOrd >= 0){
+    stepValue = maxOrd / nbGraduation;
+    value = 0;
+  } else{
+    stepValue = (maxOrd + Math.abs(minOrd)) / nbGraduation;
+    value = minOrd;
+  }
   // parcours des graduations
   for (let i = 0; i < nbGraduation; i++){
     // calcul et arrondi si nécessaire de la valeur à afficher
-    const value = adaptToDisplay((i * stepValue));
+    toDisplay = adaptToDisplay(value);
     // hauteur de la graduation à tracer
     const y = histoHeight - i * stepGraduation;
     // affichage de la valeur à gauche de la graduation dans l'espace réservé
-    ctx.fillText(String(value), axisSize / 2 - graduationLength / 2, y);
+    ctx.fillText(String(toDisplay), axisSize / 2 - graduationLength / 2, y);
     // on se place sur l'axe des ordonnées à la hauteur de la graduation
     ctx.moveTo(axisSize, y);
     // on trace la graduation
     ctx.lineTo(axisSize - graduationLength, y);
+    value += stepValue;
   }
 }
 
-function drawColumns(columns, step, axisSize){
+function drawColumns(columns, minOrd, maxOrd, step, axisSize){
 
   ctx.fillStyle = "#add8e6"; 
   // parcours de toutes les colonnes
   for (i in columns){
     column = columns[i];
     const abs  = i * step.abs;  // position "virtuelle" en abscisse
-    const ord = column.ord * step.ord;  // idem pour les ordonnées
+    let ord;
+    //const ord = column.ord * step.ord;  // idem pour les ordonnées
+    if (column.ord > 0){
+      ord = column.ord * step.ord + Math.abs(minOrd) * step.ord;  // idem pour les ordonnées
+    } else if (column.ord < 0){
+      ord = Math.abs(column.ord);
+    }
     // trace le contour de la colonne
     ctx.strokeRect(abs + axisSize, can.height - axisSize, step.abs, -ord);  
     // rempli la colonne
@@ -388,11 +400,16 @@ function drawHisto(){
 
   // on récupère les listes des abscisses et ordonnées entrées par l'utilisateur
   const lists = getLists();
+
+  sortLists(lists.abs, lists.ord);
   // on récupère le minimum et maximum de chaque liste
   const extremums = {
     abs: getExtremums(lists.abs),
     ord: getExtremums(lists.ord)
   }
+
+  minOrd = extremums.ord.min;
+  maxOrd = extremums.ord.max;
 
   // espace réservé aux graduations
   const axisSize = 200;
@@ -402,7 +419,7 @@ function drawHisto(){
   // la longueur d'une unité sur chaque axe
   const step = {
     abs: histoWidth / lists.abs.length,
-    ord: histoHeight / extremums.ord.max
+    ord: histoHeight / (Math.abs(minOrd) + maxOrd)
   }
 
   // on transforme les listes pour en faire des objets 
@@ -418,18 +435,18 @@ function drawHisto(){
 
   const graduationLength = 50;  // longueur des graduations
   drawAbs(graduationLength, axisSize, lists.abs, step.abs);
-  drawOrd(graduationLength, axisSize, histoHeight, extremums.ord.max);
+  drawOrd(graduationLength, axisSize, histoHeight, minOrd, maxOrd);
   ctx.stroke();
 
-  drawColumns(columns, step, axisSize);
+  drawColumns(columns, extremums.ord.min, extremums.ord.max, step, axisSize);
 }
 
 function resizeCanvas(){
 
   // si l'écran est en mode portrait
   if (window.innerWidth < window.innerHeight){
-    can.style.width = "100%";  // largeur "physique" (extérieur)
-    can.style.height = window.getComputedStyle(can, null).getPropertyValue("width");
+    /*can.style.width = "100%";  // largeur "physique" (extérieur)
+    can.style.height = window.getComputedStyle(can, null).getPropertyValue("width");*/
     /*
     hauteur "physique" (extérieur) :
     window.getComputedStyle(can, null) = on récupère les attributs de style
@@ -441,7 +458,7 @@ function resizeCanvas(){
   // si l'écran est en mode paysage
   else{
     // hauteur de l'élément body - distance par rapport au bord supérieur de cet élément
-    const possibleHeight = parseInt(window.getComputedStyle(document.body, null).getPropertyValue("height")) - can.getBoundingClientRect().top;
+    /*const possibleHeight = parseInt(window.getComputedStyle(document.body, null).getPropertyValue("height")) - can.getBoundingClientRect().top;
     // largeur de l'élément contenant le canvas
     const containerWidth = parseInt(window.getComputedStyle(document.querySelector("#main"), null).getPropertyValue("width"));
     if (possibleHeight < containerWidth){
@@ -451,7 +468,7 @@ function resizeCanvas(){
     else{
       can.style.width = "100%";  // largeur "physique" (extérieur)
       can.style.height = window.getComputedStyle(can, null).getPropertyValue("width");
-    }
+    }*/
   }
   // quand le canvas est petit les trait disparaissent car trop fins
   // donc j'augmente l'épaisseur
@@ -466,7 +483,6 @@ const can = document.querySelector('#can');
 can.width = 1200; // largeur "virtuelle" (intérieur)
 can.height = 1200;  // hauteur "virtuelle" (intérieur)
 // body occupe toute la hauteur de l'écran
-document.body.style.height = "100vh";
 // on récupère le contexte (= image du canvas à un instant donné) pour 
 // pouvoir dessiner dessus
 const ctx = can.getContext("2d");
