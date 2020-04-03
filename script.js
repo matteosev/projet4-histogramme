@@ -1,26 +1,56 @@
-function checkInputsRandomData(){
-  let isOk = true;
-  const sizeData = document.querySelector("#sizeData");
-  const borneInf = document.querySelector("#limitInf");
-  const borneSup = document.querySelector("#limitSup");
-  const canvasContainer = document.querySelector("#canvas-container");
-  (parseInt(sizeData.value) < 1 || sizeData === "")? sizeData.value = 1: "";
-  (parseInt(sizeData.value) > 25)? sizeData.value = 25: "";
-  (sizeData.value === "")? sizeData.value = 1: "";
-  (borneInf.value === "")? borneInf.value = 0: "";
-  (borneSup.value === "")? borneSup.value = 1: "";
+function checkInputs(random, draw){
 
-  if (!/^[0-9-+.e]*$/i.test(borneInf.value)){ 
-    alert("caractère incorrect entré pour la borne inférieure");
-    isOk = false;
+  /*
+  random: un booléen 
+    true si on check les inputs de génération de données aléatoires
+    false sinon
+  draw: un booléen 
+    true si on check les inputs renseignant les abscisses et ordonnées
+    false sinon
+*/
+  let isOk = true;
+  const listAbs = document.querySelector("#listX");
+  const listOrd = document.querySelector("#listY");
+  const canvasContainer = document.querySelector("#canvas-container");
+
+  if (random){
+    const sizeData = document.querySelector("#sizeData");
+    const borneInf = document.querySelector("#limitInf");
+    const borneSup = document.querySelector("#limitSup");
+    (parseInt(sizeData.value) < 1 || sizeData === "")? sizeData.value = 1: "";
+    (parseInt((sizeData.value) > 25))? sizeData.value = 25: "";
+    (sizeData.value === "")? sizeData.value = 1: "";
+    (borneInf.value === "")? borneInf.value = 0: "";
+    (borneSup.value === "")? borneSup.value = 1: "";
+    if (!/^[0-9-+.e]*$/i.test(borneInf.value)){ // que des chiffres, "+", "-", ".", "e", "E"
+      // voir regExp sur MDN (site de mozilla)
+      alert("caractère incorrect entré pour la borne inférieure");
+      isOk = false;
+    }
+    if (!/^[0-9-+.e]*$/i.test(borneSup.value)){ // que des chiffres, "+", "-", ".", "e", "E"
+      alert("caractère incorrect entré pour la borne supéreure");
+      isOk = false;
+    }
+    if (!/^[0-9]*$/i.test(sizeData.value)){ // que des chiffres
+      alert("caractère incorrect entré pour la taille des données");
+      isOk = false;
+    }
   }
-  if (!/^[0-9-+.e]*$/i.test(borneSup.value)){ 
-    alert("caractère incorrect entré pour la borne supéreure");
-    isOk = false;
+
+  if (draw){
+    if (!/^[0-9-+.e,]*$/i.test(listAbs.value)){
+      alert("caractère incorrect entré pour les abscisses");
+      isOk = false;
+    }
+
+    if (!/^[0-9-+.e,]*$/i.test(listOrd.value)){
+      alert("caractère incorrect entré pour les ordonnées");
+      isOk = false;
+    }
   }
 
   let canvasImage;
-  (ctx)? canvasImage = ctx.getImageData(0, 0, can.width, can.height): "";
+  (ctx && can)? canvasImage = ctx.getImageData(0, 0, can.width, can.height): "";
   (!isOk)? canvasContainer.innerHTML = "<img src='stop.svg' id='stop'></img>": canvasContainer.innerHTML = "<canvas id='can' width='1200' height='1200' ></canvas>";
 
   initializeCanvas();
@@ -28,7 +58,7 @@ function checkInputsRandomData(){
 }
 
 function generateRandomData(){
-  checkInputsRandomData();
+  checkInputs(true, false);
   const size = document.querySelector('#sizeData').value;
   const min = parseFloat(document.querySelector('#limitInf').value);
   const max = parseFloat(document.querySelector('#limitSup').value);
@@ -432,6 +462,7 @@ function drawHisto(){
   et des ordonées.
   */
 
+  checkInputs(false, true);
   // on récupère les listes des abscisses et ordonnées entrées par l'utilisateur
   const lists = getLists();
 
@@ -480,7 +511,7 @@ function initializeCanvas(){
   can.width = 1200; // largeur "virtuelle" (intérieur)
   can.height = 1200;  // hauteur "virtuelle" (intérieur)
   ctx = can.getContext("2d");
-  ctx.font = "30px Arial";  // taille et police du texte
+  ctx.font = "30px sans-serif";  // taille et police du texte
 }
 
 // mise en place
@@ -501,4 +532,3 @@ window.addEventListener("resize", () => {
   // donc j'augmente l'épaisseur
   (parseInt(can.style.height) < 300)? ctx.lineWidth = 5: ctx.lineWidth = 3;
 });
-
